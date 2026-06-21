@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="paper" x1="16" y1="8" x2="48" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffaf1"/>
+      <stop offset="1" stop-color="#f7dfc8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="19" y1="20" x2="47" y2="49" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d18453"/>
+      <stop offset="1" stop-color="#9e5c3d"/>
+    </linearGradient>
+    <filter id="shadow" x="8" y="6" width="48" height="54" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" flood-color="#5b4026" flood-opacity=".18" stdDeviation="4"/>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#f8f0e4"/>
+  <path fill="#ead9bf" d="M16 16.5c0-3.6 2.9-6.5 6.5-6.5h19.7L52 19.8v27.7c0 3.6-2.9 6.5-6.5 6.5h-23c-3.6 0-6.5-2.9-6.5-6.5v-31Z" filter="url(#shadow)"/>
+  <path fill="url(#paper)" d="M15 15.5c0-3.6 2.9-6.5 6.5-6.5h19.7L51 18.8v27.7c0 3.6-2.9 6.5-6.5 6.5h-23c-3.6 0-6.5-2.9-6.5-6.5v-31Z"/>
+  <path fill="#ead9bf" d="M41 9v6.5c0 1.9 1.6 3.5 3.5 3.5H51L41 9Z"/>
+  <rect x="22" y="24" width="20" height="3.6" rx="1.8" fill="#d8bf9e"/>
+  <rect x="22" y="34" width="15" height="3.6" rx="1.8" fill="#d8bf9e"/>
+  <circle cx="43" cy="41" r="12" fill="url(#accent)"/>
+  <path fill="none" stroke="#fffaf1" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.6" d="m37.5 40.8 3.9 4 7.1-8.2"/>
+</svg>

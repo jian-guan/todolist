@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c87545">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="favicon-48.png" type="image/png" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<title>To Do List</title>
+<style>
+  :root {
+    --bg: #f8f0e4;
+    --paper: #fffaf1;
+    --paper-soft: #fff3e4;
+    --ink: #3b2d24;
+    --muted: #9a8975;
+    --line: #ead9bf;
+    --line-strong: #d8bf9e;
+    --accent: #c87545;
+    --accent-deep: #9e5c3d;
+    --accent-soft: #f7dfc8;
+    --danger: #b5503e;
+    --morning: #e4aa55;
+    --afternoon: #c87545;
+    --evening: #835040;
+    --shadow: 0 18px 44px rgba(91, 64, 38, 0.10);
+    --soft-shadow: 0 8px 22px rgba(91, 64, 38, 0.07);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(255, 250, 241, 0.86) 0 12%, transparent 33%),
+      radial-gradient(circle at 82% 5%, rgba(245, 221, 216, 0.55) 0 10%, transparent 32%),
+      radial-gradient(circle, rgba(60, 47, 34, 0.035) 1px, transparent 1.4px),
+      var(--bg);
+    background-size: auto, auto, 18px 18px, auto;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  button, input { font: inherit; }
+  button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { transform: scale(0.96); }
+
+  .shell {
+    margin: 0 auto;
+    padding: 44px 24px 58px;
+  }
+
+  header {
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .kicker {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    margin: 0 0 20px;
+    color: var(--accent-deep);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.2px;
+    text-transform: uppercase;
+  }
+
+  header .kicker {
+    transform: translateX(-19px);
+  }
+
+  header .kicker::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    width: calc(100% + 18px);
+    height: calc(100% + 8px);
+    transform: translate(-50%, -50%) rotate(-1.5deg);
+    background: var(--accent-soft);
+    opacity: 0.72;
+    border-radius: 999px;
+  }
+
+  header h1 {
+    position: relative;
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    display: inline-block;
+    padding-bottom: 12px;
+  }
+
+  header h1::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 58px;
+    height: 0;
+    border-bottom: 2px solid var(--line-strong);
+    opacity: 0.8;
+  }
+
+  .date-line {
+    margin: 13px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .tabs {
+    max-width: 360px;
+    margin: 24px auto 24px;
+    display: flex;
+    gap: 7px;
+    background: rgba(255, 250, 241, 0.78);
+    border: 1px solid rgba(234, 217, 191, 0.9);
+    border-radius: 16px;
+    box-shadow: var(--soft-shadow);
+    padding: 6px;
+    backdrop-filter: blur(8px);
+  }
+
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 800;
+    padding: 10px 8px;
+    border-radius: 12px;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+
+  .tab-btn:hover:not(.active) {
+    background: var(--paper-soft);
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(180deg, #d18453, var(--accent));
+    color: #fff;
+    box-shadow: 0 7px 16px rgba(200, 116, 63, 0.28);
+  }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .board {
+    display: none;
+    flex-direction: column;
+  }
+
+  .board.active {
+    display: flex;
+  }
+
+  .board[data-section="future"] {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .board {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(255, 246, 234, 0.98));
+    border: 1px solid rgba(234, 217, 191, 0.92);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+
+  .panel {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(255, 246, 234, 0.98));
+    border: 1px solid rgba(234, 217, 191, 0.92);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+
+  .board::before, .panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--accent), #dfac75);
+  }
+
+  .schedule-panel {
+    background:
+      linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(255, 245, 233, 0.98)),
+      var(--paper);
+  }
+
+  .panel.schedule-panel::before {
+    background: linear-gradient(90deg, var(--morning), var(--afternoon), var(--evening));
+  }
+
+  .board[data-section="daily"] {
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .board[data-section="daily"]::before {
+    display: none;
+  }
+
+  .board[data-section="daily"].active {
+    display: block;
+  }
+
+  .daily-grid {
+    display: grid;
+    grid-template-columns: var(--daily-split, minmax(0, 1.35fr)) 8px minmax(260px, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  .daily-divider {
+    align-self: stretch;
+    width: 8px;
+    border-radius: 999px;
+    background: var(--line);
+    cursor: col-resize;
+    transition: background 0.15s;
+    touch-action: none;
+  }
+
+  .daily-divider:hover,
+  .daily-divider.dragging {
+    background: var(--accent);
+  }
+
+  .schedule-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .schedule-header .kicker {
+    margin: 0;
+  }
+
+  .schedule-date {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .block-header,
+  .board-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 13px;
+  }
+
+  .block-header h2,
+  .board-header h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 800;
+  }
+
+  .dot {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .board[data-section="future"] .dot { background: var(--accent); }
+  .board[data-section="daily"] .board-header .dot { background: var(--accent); }
+
+  .time-block[data-block="morning"] .dot {
+    background: var(--morning);
+    box-shadow:
+      0 -6px 0 -3.5px var(--morning),
+      0 6px 0 -3.5px var(--morning),
+      -6px 0 0 -3.5px var(--morning),
+      6px 0 0 -3.5px var(--morning);
+  }
+
+  .time-block[data-block="afternoon"] .dot {
+    background: var(--afternoon);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .time-block[data-block="evening"] .dot {
+    background: var(--evening);
+    overflow: visible;
+  }
+
+  .time-block[data-block="evening"] .dot::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    right: -2px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--paper);
+  }
+
+  .time-blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 20px;
+  }
+
+  .time-block[data-block="evening"] {
+    grid-column: 1 / -1;
+  }
+
+  .count {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    background: rgba(248, 240, 228, 0.92);
+    border: 1px solid rgba(234, 217, 191, 0.78);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .add-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .add-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid rgba(234, 217, 191, 0.96);
+    border-radius: 12px;
+    padding: 10px 13px;
+    font-size: 13.5px;
+    outline: none;
+    background: rgba(255, 250, 241, 0.76);
+    color: var(--ink);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+
+  .add-form input:focus {
+    border-color: var(--accent);
+    background: #fffdf8;
+    box-shadow: 0 0 0 3px rgba(200, 117, 69, 0.13);
+  }
+
+  .add-form button {
+    border: none;
+    background: linear-gradient(180deg, #d18453, var(--accent));
+    color: #fff;
+    width: 38px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 6px 14px rgba(200, 116, 63, 0.24);
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+
+  .add-form button:hover {
+    opacity: 0.9;
+    box-shadow: 0 8px 18px rgba(200, 116, 63, 0.30);
+  }
+
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 44px;
+    border-radius: 14px;
+    padding: 3px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+
+  .task-list.drag-over {
+    background: rgba(247, 223, 200, 0.65);
+    box-shadow: inset 0 0 0 1px rgba(200, 117, 69, 0.20);
+  }
+
+  .task-group {
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+  }
+
+  .task-group.dragging,
+  .task-item.dragging {
+    opacity: 0.35;
+  }
+
+  .task-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 10px 11px;
+    border: 1px solid rgba(234, 217, 191, 0.96);
+    border-radius: 13px;
+    background:
+      linear-gradient(180deg, rgba(255, 250, 241, 0.96), rgba(255, 244, 230, 0.96));
+    cursor: grab;
+    box-shadow: 0 3px 10px rgba(91, 64, 38, 0.045);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .task-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 9px 18px rgba(91, 64, 38, 0.09);
+    border-color: var(--line-strong);
+  }
+
+  .expand-toggle {
+    position: absolute;
+    left: -9px;
+    top: 50%;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 7px;
+    background: rgba(255, 250, 241, 0.72);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
+    transition: transform 0.15s, color 0.15s, background 0.15s;
+  }
+
+  .expand-toggle.open {
+    transform: translateY(-50%) rotate(90deg);
+    color: var(--accent);
+  }
+
+  .expand-toggle:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .checkbox {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid #d8c1a4;
+    background: #fffdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #fff;
+    font-size: 11px;
+    line-height: 1;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s;
+  }
+
+  .task-item.done .checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.05);
+  }
+
+  .task-item.done .checkbox::after {
+    content: "✓";
+  }
+
+  .task-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.8px;
+    word-break: break-word;
+    line-height: 1.45;
+  }
+
+  .task-item.done {
+    background: rgba(250, 238, 222, 0.72);
+  }
+
+  .task-item.just-completed {
+    animation: complete-soft 0.42s ease;
+  }
+
+  .task-item.just-completed .checkbox {
+    animation: checkbox-pop 0.42s ease;
+  }
+
+  .task-item.done .task-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: rgba(154, 137, 117, 0.55);
+  }
+
+  @keyframes complete-soft {
+    0% {
+      background: rgba(247, 223, 200, 0.98);
+      transform: scale(1);
+    }
+    45% {
+      background: rgba(255, 250, 241, 0.98);
+      transform: scale(1.012);
+    }
+    100% {
+      background: rgba(250, 238, 222, 0.72);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes checkbox-pop {
+    0% { transform: scale(0.82); }
+    55% { transform: scale(1.18); }
+    100% { transform: scale(1.05); }
+  }
+
+  .sub-progress {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-deep);
+    background: rgba(247, 223, 200, 0.72);
+    border: 1px solid rgba(216, 191, 158, 0.62);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .edit-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 13.5px;
+    font-family: inherit;
+    border: 1px solid var(--accent);
+    border-radius: 9px;
+    padding: 5px 8px;
+    outline: none;
+    background: #fffdf8;
+    box-shadow: 0 0 0 3px rgba(200, 117, 69, 0.12);
+  }
+
+  .delete-btn,
+  .transfer-btn,
+  .addsub-btn {
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 16px;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s, background 0.15s, border-color 0.15s;
+  }
+
+  .task-item:hover .delete-btn,
+  .task-item:hover .transfer-btn,
+  .task-item:hover .addsub-btn {
+    opacity: 1;
+  }
+
+  .delete-btn:hover {
+    color: var(--danger);
+    background: rgba(181, 80, 62, 0.08);
+    border-color: rgba(181, 80, 62, 0.14);
+  }
+
+  .transfer-btn:hover,
+  .addsub-btn:hover {
+    color: var(--accent);
+    background: rgba(247, 223, 200, 0.7);
+    border-color: rgba(200, 117, 69, 0.14);
+  }
+
+  .children-list {
+    gap: 7px;
+    margin: 8px 0 0 30px;
+    padding: 0 0 0 12px;
+    border-left: 2px solid rgba(216, 191, 158, 0.55);
+  }
+
+  .child-item {
+    min-height: 36px;
+    background: rgba(255, 250, 241, 0.82);
+    padding: 8px 9px;
+    border-radius: 11px;
+  }
+
+  .child-item .task-text {
+    font-size: 12.5px;
+  }
+
+  .subtask-form {
+    margin: 1px 0 0;
+  }
+
+  .subtask-form input {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    border-radius: 10px;
+  }
+
+  .subtask-form button {
+    width: 30px;
+    min-width: 30px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  .empty-hint {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 13px 10px;
+    border: 1px dashed rgba(216, 191, 158, 0.76);
+    border-radius: 13px;
+    background: rgba(255, 250, 241, 0.48);
+  }
+
+  @media (max-width: 760px) {
+    .daily-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .daily-divider {
+      display: none;
+    }
+  }
+
+  @media (hover: none) {
+    .delete-btn,
+    .transfer-btn,
+    .addsub-btn {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .shell {
+      padding: 30px 16px 40px;
+    }
+
+    header h1 {
+      font-size: 25px;
+    }
+
+    .board {
+      padding: 17px;
+    }
+
+    .panel {
+      padding: 17px;
+    }
+
+    .schedule-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .task-item {
+      padding: 11px 10px;
+    }
+
+    .checkbox {
+      width: 22px;
+      height: 22px;
+    }
+
+    .add-form button {
+      width: 42px;
+    }
+
+    .delete-btn,
+    .transfer-btn,
+    .addsub-btn {
+      font-size: 18px;
+      padding: 4px 6px;
+    }
+
+    .children-list {
+      margin-left: 20px;
+      padding-left: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header>
+    <p class="kicker">Plan your day</p>
+    <h1>To Do List</h1>
+    <p class="date-line" id="dateLine"></p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-section="daily">现在 · Daily</button>
+    <button class="tab-btn" data-section="future">未来 · Future</button>
+  </nav>
+
+  <main>
+    <section class="board active" data-section="daily">
+      <div class="daily-grid">
+        <div class="panel">
+          <div class="board-header">
+            <span class="dot"></span>
+            <h2>今日任务池</h2>
+            <span class="count" data-section="daily" data-block="">0/0</span>
+          </div>
+          <form class="add-form" data-section="daily" data-block="">
+            <input type="text" placeholder="写下一件今天想推进的事" maxlength="200">
+            <button type="submit">+</button>
+          </form>
+          <div class="task-list" data-section="daily" data-block=""></div>
+        </div>
+
+        <div class="daily-divider" id="dailyDivider" role="separator" aria-orientation="vertical" aria-label="调整两栏宽度" tabindex="0"></div>
+
+        <div class="panel schedule-panel">
+          <div class="schedule-header">
+            <p class="kicker">今日安排 · 拖过来分配时间</p>
+            <span class="schedule-date" id="scheduleDate"></span>
+          </div>
+
+          <div class="time-blocks">
+            <div class="time-block" data-block="morning">
+              <div class="block-header">
+                <span class="dot"></span>
+                <h2>上午</h2>
+                <span class="count" data-section="daily" data-block="morning">0/0</span>
+              </div>
+              <div class="task-list" data-section="daily" data-block="morning"></div>
+            </div>
+
+            <div class="time-block" data-block="afternoon">
+              <div class="block-header">
+                <span class="dot"></span>
+                <h2>下午</h2>
+                <span class="count" data-section="daily" data-block="afternoon">0/0</span>
+              </div>
+              <div class="task-list" data-section="daily" data-block="afternoon"></div>
+            </div>
+
+            <div class="time-block" data-block="evening">
+              <div class="block-header">
+                <span class="dot"></span>
+                <h2>晚上</h2>
+                <span class="count" data-section="daily" data-block="evening">0/0</span>
+              </div>
+              <div class="task-list" data-section="daily" data-block="evening"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="board" data-section="future">
+      <div class="board-header">
+        <span class="dot"></span>
+        <h2>Future · 以后再做</h2>
+        <span class="count" data-section="future" data-block="">0/0</span>
+      </div>
+      <form class="add-form" data-section="future" data-block="">
+        <input type="text" placeholder="把以后要做的事先放在这里" maxlength="200">
+        <button type="submit">+</button>
+      </form>
+      <div class="task-list" data-section="future" data-block=""></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "todo-board-data-v5";
+  var OLD_V4_KEY = "todo-board-data-v4";
+  var OLD_V3_KEY = "todo-board-data-v3";
+  var OLD_KEYS = ["todo-board-data-v2", "todo-board-data-v1"];
+
+  var TOP_KEYS = [
+    { section: "daily", block: "" },
+    { section: "daily", block: "morning" },
+    { section: "daily", block: "afternoon" },
+    { section: "daily", block: "evening" },
+    { section: "future", block: "" }
+  ];
+  var TRANSFER_MAP = { future: "daily" };
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  function normalizeChild(c) {
+    return { id: c.id || uid(), text: (c.text || "").toString(), done: Boolean(c.done) };
+  }
+
+  function normalizeTask(t) {
+    return {
+      id: t.id || uid(),
+      text: (t.text || "").toString(),
+      done: Boolean(t.done),
+      expanded: Boolean(t.expanded),
+      children: Array.isArray(t.children)
+        ? t.children.map(normalizeChild).filter(function (c) { return c.text.trim(); })
+        : []
+    };
+  }
+
+  function cleanList(arr) {
+    return arr.map(normalizeTask).filter(function (t) { return t.text.trim(); });
+  }
+
+  function emptyData() {
+    return { daily: [], dailySchedule: null, future: [] };
+  }
+
+  function readStorage(key) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function cleanSchedule(src) {
+    if (!src || typeof src !== "object") return null;
+    return {
+      date: src.date || "",
+      morning: Array.isArray(src.morning) ? cleanList(src.morning) : [],
+      afternoon: Array.isArray(src.afternoon) ? cleanList(src.afternoon) : [],
+      evening: Array.isArray(src.evening) ? cleanList(src.evening) : []
+    };
+  }
+
+  function loadData() {
+    var next = emptyData();
+
+    var v5 = readStorage(STORAGE_KEY);
+    if (v5 && Array.isArray(v5.daily)) {
+      next.daily = cleanList(v5.daily);
+      next.future = Array.isArray(v5.future) ? cleanList(v5.future) : [];
+      next.dailySchedule = cleanSchedule(v5.dailySchedule);
+      return next;
+    }
+
+    var v4 = readStorage(OLD_V4_KEY);
+    if (v4 && Array.isArray(v4.daily)) {
+      next.daily = cleanList(v4.daily);
+      next.future = cleanList([].concat(v4.weekly || [], v4.monthly || []));
+      next.dailySchedule = cleanSchedule(v4.dailySchedule);
+      return next;
+    }
+
+    var v3 = readStorage(OLD_V3_KEY);
+    if (v3 && v3.daily && typeof v3.daily === "object" && !Array.isArray(v3.daily)) {
+      var mergedDaily = [];
+      ["morning", "afternoon", "evening"].forEach(function (b) {
+        if (Array.isArray(v3.daily[b])) mergedDaily = mergedDaily.concat(v3.daily[b]);
+      });
+      next.daily = cleanList(mergedDaily);
+      next.future = cleanList([].concat(v3.weekly || [], v3.monthly || []));
+      return next;
+    }
+
+    for (var i = 0; i < OLD_KEYS.length; i++) {
+      var old = readStorage(OLD_KEYS[i]);
+      if (old) {
+        if (Array.isArray(old.daily)) next.daily = cleanList(old.daily);
+        next.future = cleanList([].concat(old.weekly || [], old.monthly || []));
+        break;
+      }
+    }
+    return next;
+  }
+
+  var data = loadData();
+
+  function ensureScheduleForToday() {
+    var key = todayKey();
+    if (!data.dailySchedule || data.dailySchedule.date !== key) {
+      if (data.dailySchedule) {
+        ["morning", "afternoon", "evening"].forEach(function (b) {
+          (data.dailySchedule[b] || []).forEach(function (t) { data.daily.push(t); });
+        });
+      }
+      data.dailySchedule = { date: key, morning: [], afternoon: [], evening: [] };
+    }
+  }
+
+  ensureScheduleForToday();
+
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getTasks(section, block) {
+    if (section === "daily") return block ? data.dailySchedule[block] : data.daily;
+    return data[section];
+  }
+
+  function setTasks(section, block, arr) {
+    if (section === "daily") {
+      if (block) data.dailySchedule[block] = arr;
+      else data.daily = arr;
+    } else {
+      data[section] = arr;
+    }
+  }
+
+  function listSelector(prefix, section, block) {
+    return prefix + '[data-section="' + section + '"][data-block="' + (block || "") + '"]';
+  }
+
+  function renderDate() {
+    var now = new Date();
+    var date = now.toLocaleDateString("zh-CN", { month: "long", day: "numeric" });
+    var weekday = now.toLocaleDateString("zh-CN", { weekday: "long" });
+    document.getElementById("dateLine").textContent = date + " · " + weekday;
+    document.getElementById("scheduleDate").textContent = date;
+  }
+
+  function updateCount(section, block) {
+    var el = document.querySelector(listSelector(".count", section, block));
+    var tasks = getTasks(section, block);
+    var done = tasks.filter(function (t) { return t.done; }).length;
+    el.textContent = done + "/" + tasks.length;
+  }
+
+  function cleanupDragOver() {
+    document.querySelectorAll(".task-list.drag-over").forEach(function (el) {
+      el.classList.remove("drag-over");
+    });
+  }
+
+  function markJustCompleted(id) {
+    requestAnimationFrame(function () {
+      var el = document.querySelector('[data-id="' + id + '"]');
+      if (!el) return;
+      var row = el.classList.contains("task-group") ? el.querySelector(".task-item") : el;
+      if (!row) return;
+      row.classList.add("just-completed");
+      row.addEventListener("animationend", function () {
+        row.classList.remove("just-completed");
+      }, { once: true });
+    });
+  }
+
+  function startEdit(row, task, section, block) {
+    var textEl = row.querySelector(".task-text");
+    var input = document.createElement("input");
+    input.className = "edit-input";
+    input.value = task.text;
+    row.replaceChild(input, textEl);
+    input.focus();
+    input.select();
+
+    var finished = false;
+    function finish(commit) {
+      if (finished) return;
+      finished = true;
+      if (commit) {
+        var val = input.value.trim();
+        if (val) {
+          task.text = val;
+        } else {
+          setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
+        }
+        saveData();
+      }
+      renderList(section, block);
+    }
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") finish(true);
+      else if (e.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", function () { finish(true); });
+  }
+
+  function startEditChild(item, child, parentTask, section, block) {
+    var textEl = item.querySelector(".task-text");
+    var input = document.createElement("input");
+    input.className = "edit-input";
+    input.value = child.text;
+    item.replaceChild(input, textEl);
+    input.focus();
+    input.select();
+
+    var finished = false;
+    function finish(commit) {
+      if (finished) return;
+      finished = true;
+      if (commit) {
+        var val = input.value.trim();
+        if (val) {
+          child.text = val;
+        } else {
+          parentTask.children = parentTask.children.filter(function (c) { return c.id !== child.id; });
+        }
+        saveData();
+      }
+      renderList(section, block);
+    }
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") finish(true);
+      else if (e.key === "Escape") finish(false);
+    });
+    input.addEventListener("blur", function () { finish(true); });
+  }
+
+  function createChildItem(child, parentTask, section, block) {
+    var item = document.createElement("div");
+    item.className = "task-item child-item" + (child.done ? " done" : "");
+    item.draggable = true;
+    item.dataset.id = child.id;
+    item.dataset.kind = "item";
+
+    var checkbox = document.createElement("button");
+    checkbox.type = "button";
+    checkbox.className = "checkbox";
+    checkbox.setAttribute("aria-label", "toggle complete");
+    checkbox.addEventListener("click", function () {
+      var completed = !child.done;
+      child.done = !child.done;
+      saveData();
+      renderList(section, block);
+      if (completed) markJustCompleted(child.id);
+    });
+
+    var text = document.createElement("span");
+    text.className = "task-text";
+    text.textContent = child.text;
+    text.addEventListener("dblclick", function () { startEditChild(item, child, parentTask, section, block); });
+
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "delete-btn";
+    del.textContent = "×";
+    del.setAttribute("aria-label", "delete");
+    del.addEventListener("click", function () {
+      parentTask.children = parentTask.children.filter(function (c) { return c.id !== child.id; });
+      saveData();
+      renderList(section, block);
+    });
+
+    item.appendChild(checkbox);
+    item.appendChild(text);
+    item.appendChild(del);
+
+    item.addEventListener("dragstart", function () {
+      item.classList.add("dragging");
+    });
+    item.addEventListener("dragend", function () {
+      item.classList.remove("dragging");
+      cleanupDragOver();
+      syncAllOrders();
+    });
+
+    return item;
+  }
+
+  function createChildrenList(task, section, block) {
+    var wrap = document.createElement("div");
+    wrap.className = "task-list children-list";
+    wrap.dataset.section = section;
+    wrap.dataset.block = block || "";
+    wrap.dataset.parent = task.id;
+
+    var ordered = task.children.filter(function (c) { return !c.done; })
+      .concat(task.children.filter(function (c) { return c.done; }));
+    ordered.forEach(function (child) {
+      wrap.appendChild(createChildItem(child, task, section, block));
+    });
+
+    var addForm = document.createElement("form");
+    addForm.className = "add-form subtask-form";
+    var input = document.createElement("input");
+    input.className = "subtask-input";
+    input.type = "text";
+    input.placeholder = "添加子任务";
+    input.maxLength = 200;
+    var btn = document.createElement("button");
+    btn.type = "submit";
+    btn.textContent = "+";
+    addForm.appendChild(input);
+    addForm.appendChild(btn);
+    addForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var val = input.value.trim();
+      if (!val) return;
+      task.children.push({ id: uid(), text: val, done: false });
+      saveData();
+      renderList(section, block);
+      requestAnimationFrame(function () {
+        var i2 = document.querySelector('.children-list[data-parent="' + task.id + '"] .subtask-input');
+        if (i2) i2.focus();
+      });
+    });
+    wrap.appendChild(addForm);
+
+    return wrap;
+  }
+
+  function createParentGroup(task, section, block) {
+    var group = document.createElement("div");
+    group.className = "task-group";
+    group.draggable = true;
+    group.dataset.id = task.id;
+    group.dataset.kind = "group";
+
+    var row = document.createElement("div");
+    row.className = "task-item" + (task.done ? " done" : "") + (task.children.length > 0 ? " has-children" : "");
+
+    if (task.children.length > 0) {
+      var toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "expand-toggle" + (task.expanded ? " open" : "");
+      toggle.setAttribute("aria-label", "expand subtasks");
+      toggle.textContent = "▸";
+      toggle.addEventListener("click", function () {
+        task.expanded = !task.expanded;
+        saveData();
+        renderList(section, block);
+      });
+      row.appendChild(toggle);
+    }
+
+    var checkbox = document.createElement("button");
+    checkbox.type = "button";
+    checkbox.className = "checkbox";
+    checkbox.setAttribute("aria-label", "toggle complete");
+    checkbox.addEventListener("click", function () {
+      var completed = !task.done;
+      task.done = !task.done;
+      saveData();
+      renderList(section, block);
+      if (completed) markJustCompleted(task.id);
+    });
+
+    var text = document.createElement("span");
+    text.className = "task-text";
+    text.textContent = task.text;
+    text.addEventListener("dblclick", function () { startEdit(row, task, section, block); });
+
+    row.appendChild(checkbox);
+    row.appendChild(text);
+
+    if (task.children.length > 0) {
+      var doneCount = task.children.filter(function (c) { return c.done; }).length;
+      var progress = document.createElement("span");
+      progress.className = "sub-progress";
+      progress.textContent = doneCount + "/" + task.children.length;
+      row.appendChild(progress);
+    }
+
+    var transferTarget = TRANSFER_MAP[section];
+    if (transferTarget) {
+      var transfer = document.createElement("button");
+      transfer.type = "button";
+      transfer.className = "transfer-btn";
+      transfer.textContent = "→";
+      transfer.title = "转到 Daily";
+      transfer.setAttribute("aria-label", "transfer to daily");
+      transfer.addEventListener("click", function () {
+        setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
+        getTasks(transferTarget, "").push(task);
+        saveData();
+        renderList(section, block);
+        renderList(transferTarget, "");
+      });
+      row.appendChild(transfer);
+    }
+
+    var addSub = document.createElement("button");
+    addSub.type = "button";
+    addSub.className = "addsub-btn";
+    addSub.title = "添加子任务";
+    addSub.setAttribute("aria-label", "add subtask");
+    addSub.textContent = "+";
+    addSub.addEventListener("click", function () {
+      task.expanded = true;
+      saveData();
+      renderList(section, block);
+      requestAnimationFrame(function () {
+        var input = document.querySelector('.children-list[data-parent="' + task.id + '"] .subtask-input');
+        if (input) input.focus();
+      });
+    });
+    row.appendChild(addSub);
+
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "delete-btn";
+    del.textContent = "×";
+    del.setAttribute("aria-label", "delete");
+    del.addEventListener("click", function () {
+      setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
+      saveData();
+      renderList(section, block);
+    });
+    row.appendChild(del);
+
+    group.appendChild(row);
+
+    if (task.expanded) {
+      group.appendChild(createChildrenList(task, section, block));
+    }
+
+    group.addEventListener("dragstart", function () {
+      group.classList.add("dragging");
+    });
+    group.addEventListener("dragend", function () {
+      group.classList.remove("dragging");
+      cleanupDragOver();
+      syncAllOrders();
+    });
+
+    return group;
+  }
+
+  function renderList(section, block) {
+    var list = document.querySelector(listSelector(".task-list", section, block));
+    list.innerHTML = "";
+    var tasks = getTasks(section, block);
+    var ordered = tasks.filter(function (t) { return !t.done; })
+      .concat(tasks.filter(function (t) { return t.done; }));
+
+    if (!ordered.length) {
+      var hint = document.createElement("div");
+      hint.className = "empty-hint";
+      if (block) {
+        hint.textContent = "拖一个任务到这里安排时间";
+      } else if (section === "future") {
+        hint.textContent = "把以后要做的事先放在这里";
+      } else {
+        hint.textContent = "写下一件今天想推进的事";
+      }
+      list.appendChild(hint);
+    } else {
+      ordered.forEach(function (task) {
+        list.appendChild(createParentGroup(task, section, block));
+      });
+    }
+    updateCount(section, block);
+  }
+
+  function render() {
+    TOP_KEYS.forEach(function (k) { renderList(k.section, k.block); });
+  }
+
+  function getDragAfterElement(container, y) {
+    var matchClass = container.classList.contains("children-list") ? "task-item" : "task-group";
+    var items = Array.prototype.slice.call(container.children).filter(function (el) {
+      return el.classList.contains(matchClass) && !el.classList.contains("dragging");
+    });
+    var closest = { offset: -Infinity, element: null };
+    items.forEach(function (child) {
+      var box = child.getBoundingClientRect();
+      var offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        closest = { offset: offset, element: child };
+      }
+    });
+    return closest.element;
+  }
+
+  function syncAllOrders() {
+    var byId = {};
+    function collect(arr) {
+      arr.forEach(function (t) {
+        byId[t.id] = t;
+        (t.children || []).forEach(function (c) { byId[c.id] = c; });
+      });
+    }
+    TOP_KEYS.forEach(function (k) { collect(getTasks(k.section, k.block)); });
+
+    var childAssignments = {};
+    document.querySelectorAll(".children-list").forEach(function (wrap) {
+      var parentId = wrap.dataset.parent;
+      var ids = Array.prototype.slice.call(wrap.children)
+        .filter(function (el) { return el.classList.contains("task-item"); })
+        .map(function (el) { return el.dataset.id; });
+      childAssignments[parentId] = ids.map(function (id) { return byId[id]; }).filter(Boolean);
+    });
+
+    TOP_KEYS.forEach(function (k) {
+      var list = document.querySelector(listSelector(".task-list", k.section, k.block));
+      var directs = Array.prototype.slice.call(list.children).filter(function (el) {
+        return el.classList.contains("task-group") || el.classList.contains("task-item");
+      });
+      var rebuilt = directs.map(function (el) {
+        var obj = byId[el.dataset.id];
+        if (!obj) return null;
+        if (!Array.isArray(obj.children)) obj.children = [];
+        if (typeof obj.expanded !== "boolean") obj.expanded = false;
+        if (childAssignments.hasOwnProperty(obj.id)) obj.children = childAssignments[obj.id];
+        return obj;
+      }).filter(Boolean);
+      setTasks(k.section, k.block, rebuilt);
+    });
+
+    saveData();
+    render();
+  }
+
+  document.addEventListener("dragover", function (e) {
+    var list = e.target.closest(".task-list");
+    if (!list) return;
+    var dragging = document.querySelector(".dragging");
+    if (!dragging) return;
+    if (dragging.dataset.kind === "group" && list.classList.contains("children-list")) return;
+    e.preventDefault();
+    list.classList.add("drag-over");
+    var after = getDragAfterElement(list, e.clientY);
+    if (after == null) list.appendChild(dragging);
+    else list.insertBefore(dragging, after);
+  });
+
+  document.addEventListener("dragleave", function (e) {
+    var list = e.target.closest(".task-list");
+    if (!list) return;
+    if (!list.contains(e.relatedTarget)) list.classList.remove("drag-over");
+  });
+
+  document.addEventListener("drop", function (e) {
+    var list = e.target.closest(".task-list");
+    if (!list) return;
+    e.preventDefault();
+    list.classList.remove("drag-over");
+  });
+
+  document.querySelectorAll(".add-form").forEach(function (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var section = form.dataset.section;
+      var block = form.dataset.block;
+      var input = form.querySelector("input");
+      var val = input.value.trim();
+      if (!val) return;
+      getTasks(section, block).push({ id: uid(), text: val, done: false, expanded: false, children: [] });
+      input.value = "";
+      saveData();
+      renderList(section, block);
+    });
+  });
+
+  document.querySelectorAll(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var section = btn.dataset.section;
+      document.querySelectorAll(".tab-btn").forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+      document.querySelectorAll(".board").forEach(function (board) {
+        board.classList.toggle("active", board.dataset.section === section);
+      });
+    });
+  });
+
+  (function initDailyDivider() {
+    var DAILY_SPLIT_KEY = "todo-daily-split-v1";
+    var DEFAULT_RATIO = 1.35 / (1.35 + 0.85);
+    var MIN_LEFT = 300;
+    var MIN_RIGHT = 260;
+
+    var grid = document.querySelector(".daily-grid");
+    var divider = document.getElementById("dailyDivider");
+    if (!grid || !divider) return;
+
+    function getAvailableWidth() {
+      var rect = grid.getBoundingClientRect();
+      var dividerWidth = divider.getBoundingClientRect().width || 8;
+      var gap = parseFloat(getComputedStyle(grid).columnGap) || 20;
+      return rect.width - dividerWidth - gap * 2;
+    }
+
+    function clampLeft(left, available) {
+      return Math.max(MIN_LEFT, Math.min(left, available - MIN_RIGHT));
+    }
+
+    function applyRatio(ratio) {
+      var available = getAvailableWidth();
+      if (available <= MIN_LEFT + MIN_RIGHT) return;
+      var left = clampLeft(available * ratio, available);
+      grid.style.setProperty("--daily-split", left + "px");
+    }
+
+    function loadRatio() {
+      try {
+        var n = parseFloat(localStorage.getItem(DAILY_SPLIT_KEY));
+        return n >= 0.1 && n <= 0.9 ? n : DEFAULT_RATIO;
+      } catch (e) {
+        return DEFAULT_RATIO;
+      }
+    }
+
+    function saveRatio(ratio) {
+      try { localStorage.setItem(DAILY_SPLIT_KEY, String(ratio)); } catch (e) {}
+    }
+
+    var ratio = loadRatio();
+    applyRatio(ratio);
+    window.addEventListener("resize", function () { applyRatio(ratio); });
+
+    var dragging = false;
+
+    divider.addEventListener("pointerdown", function (e) {
+      dragging = true;
+      divider.classList.add("dragging");
+      divider.setPointerCapture(e.pointerId);
+    });
+
+    divider.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var available = getAvailableWidth();
+      if (available <= MIN_LEFT + MIN_RIGHT) return;
+      var rect = grid.getBoundingClientRect();
+      var left = clampLeft(e.clientX - rect.left, available);
+      grid.style.setProperty("--daily-split", left + "px");
+      ratio = left / available;
+    });
+
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      divider.classList.remove("dragging");
+      saveRatio(ratio);
+    }
+
+    divider.addEventListener("pointerup", endDrag);
+    divider.addEventListener("pointercancel", endDrag);
+
+    divider.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      var available = getAvailableWidth();
+      if (available <= MIN_LEFT + MIN_RIGHT) return;
+      e.preventDefault();
+      var left = clampLeft(ratio * available + (e.key === "ArrowLeft" ? -24 : 24), available);
+      grid.style.setProperty("--daily-split", left + "px");
+      ratio = left / available;
+      saveRatio(ratio);
+    });
+  })();
+
+  renderDate();
+  saveData();
+  render();
+})();
+</script>
+</body>
+</html>
