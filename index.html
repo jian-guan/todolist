@@ -844,8 +844,10 @@
   }
 
   function normalizeTask(t) {
+    var id = t.id || uid();
     return {
-      id: t.id || uid(),
+      id: id,
+      lineageId: t.lineageId || id,
       text: (t.text || "").toString(),
       done: Boolean(t.done),
       expanded: Boolean(t.expanded),
@@ -1317,13 +1319,16 @@
 
   function syncAllOrders() {
     var byId = {};
-    function collect(arr) {
-      arr.forEach(function (t) {
+    var childOrigin = {};
+    TOP_KEYS.forEach(function (k) {
+      getTasks(k.section, k.block).forEach(function (t) {
         byId[t.id] = t;
-        (t.children || []).forEach(function (c) { byId[c.id] = c; });
+        (t.children || []).forEach(function (c) {
+          byId[c.id] = c;
+          childOrigin[c.id] = { lineageId: t.lineageId, text: t.text, done: t.done };
+        });
       });
-    }
-    TOP_KEYS.forEach(function (k) { collect(getTasks(k.section, k.block)); });
+    });
 
     var childAssignments = {};
     document.querySelectorAll(".children-list").forEach(function (wrap) {
@@ -1336,18 +1341,47 @@
 
     TOP_KEYS.forEach(function (k) {
       var list = document.querySelector(listSelector(".task-list", k.section, k.block));
-      var directs = Array.prototype.slice.call(list.children).filter(function (el) {
-        return el.classList.contains("task-group") || el.classList.contains("task-item");
-      });
-      var rebuilt = directs.map(function (el) {
+      var directs = Array.prototype.slice.call(list.children);
+
+      var groupObjs = [];
+      directs.forEach(function (el) {
+        if (!el.classList.contains("task-group")) return;
         var obj = byId[el.dataset.id];
-        if (!obj) return null;
+        if (!obj) return;
         if (!Array.isArray(obj.children)) obj.children = [];
         if (typeof obj.expanded !== "boolean") obj.expanded = false;
         if (childAssignments.hasOwnProperty(obj.id)) obj.children = childAssignments[obj.id];
-        return obj;
-      }).filter(Boolean);
-      setTasks(k.section, k.block, rebuilt);
+        groupObjs.push(obj);
+      });
+
+      // A bare .task-item dropped straight into a top-level list is a subtask
+      // pulled out on its own. It brings its parent along: if this list already
+      // has a task with the same lineage, the subtask merges into it; otherwise
+      // a new independent copy of the parent is forked here to hold it.
+      var newForks = [];
+      directs.forEach(function (el) {
+        if (!el.classList.contains("task-item")) return;
+        var child = byId[el.dataset.id];
+        if (!child) return;
+        var origin = childOrigin[el.dataset.id];
+        var lineageId = origin ? origin.lineageId : uid();
+        var host = groupObjs.concat(newForks).filter(function (t) { return t.lineageId === lineageId; })[0];
+        if (host) {
+          host.children.push(child);
+          host.expanded = true;
+        } else {
+          newForks.push({
+            id: uid(),
+            lineageId: lineageId,
+            text: origin ? origin.text : child.text,
+            done: origin ? origin.done : false,
+            expanded: true,
+            children: [child]
+          });
+        }
+      });
+
+      setTasks(k.section, k.block, groupObjs.concat(newForks));
     });
 
     saveData();
@@ -1388,7 +1422,8 @@
       var input = form.querySelector("input");
       var val = input.value.trim();
       if (!val) return;
-      getTasks(section, block).push({ id: uid(), text: val, done: false, expanded: false, children: [] });
+      var newId = uid();
+      getTasks(section, block).push({ id: newId, lineageId: newId, text: val, done: false, expanded: false, children: [] });
       input.value = "";
       saveData();
       renderList(section, block);
