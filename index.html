@@ -1100,10 +1100,12 @@
     item.appendChild(text);
     item.appendChild(del);
 
-    item.addEventListener("dragstart", function () {
+    item.addEventListener("dragstart", function (e) {
+      e.stopPropagation();
       item.classList.add("dragging");
     });
-    item.addEventListener("dragend", function () {
+    item.addEventListener("dragend", function (e) {
+      e.stopPropagation();
       item.classList.remove("dragging");
       cleanupDragOver();
       syncAllOrders();
@@ -1259,10 +1261,12 @@
       group.appendChild(createChildrenList(task, section, block));
     }
 
-    group.addEventListener("dragstart", function () {
+    group.addEventListener("dragstart", function (e) {
+      e.stopPropagation();
       group.classList.add("dragging");
     });
-    group.addEventListener("dragend", function () {
+    group.addEventListener("dragend", function (e) {
+      e.stopPropagation();
       group.classList.remove("dragging");
       cleanupDragOver();
       syncAllOrders();
