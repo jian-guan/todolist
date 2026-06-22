@@ -675,6 +675,33 @@
     }
   }
 
+  .undo-btn {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #d18453, var(--accent));
+    color: #fff;
+    font-size: 21px;
+    font-weight: 800;
+    box-shadow: 0 10px 24px rgba(200, 116, 63, 0.32);
+    z-index: 50;
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  }
+
+  .undo-btn:disabled {
+    opacity: 0.32;
+    box-shadow: 0 6px 14px rgba(200, 116, 63, 0.16);
+    cursor: default;
+  }
+
+  .undo-btn:not(:disabled):hover {
+    opacity: 0.9;
+  }
+
   @media (max-width: 600px) {
     .shell {
       padding: 30px 16px 40px;
@@ -809,6 +836,8 @@
     </section>
   </main>
 </div>
+
+<button type="button" id="undoBtn" class="undo-btn" title="撤销上一步操作 (Ctrl/Cmd+Z)" aria-label="撤销" disabled>↶</button>
 
 <script>
 (function () {
@@ -945,6 +974,28 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
+  var HISTORY_LIMIT = 50;
+  var historyStack = [];
+
+  function updateUndoButton() {
+    var btn = document.getElementById("undoBtn");
+    if (btn) btn.disabled = historyStack.length === 0;
+  }
+
+  function pushHistory() {
+    historyStack.push(JSON.parse(JSON.stringify(data)));
+    if (historyStack.length > HISTORY_LIMIT) historyStack.shift();
+    updateUndoButton();
+  }
+
+  function undo() {
+    if (!historyStack.length) return;
+    data = historyStack.pop();
+    saveData();
+    render();
+    updateUndoButton();
+  }
+
   function getTasks(section, block) {
     if (section === "daily") return block ? data.dailySchedule[block] : data.daily;
     return data[section];
@@ -1011,6 +1062,7 @@
       if (finished) return;
       finished = true;
       if (commit) {
+        pushHistory();
         var val = input.value.trim();
         if (val) {
           task.text = val;
@@ -1043,6 +1095,7 @@
       if (finished) return;
       finished = true;
       if (commit) {
+        pushHistory();
         var val = input.value.trim();
         if (val) {
           child.text = val;
@@ -1073,6 +1126,7 @@
     checkbox.className = "checkbox";
     checkbox.setAttribute("aria-label", "toggle complete");
     checkbox.addEventListener("click", function () {
+      pushHistory();
       var completed = !child.done;
       child.done = !child.done;
       saveData();
@@ -1091,6 +1145,7 @@
     del.textContent = "×";
     del.setAttribute("aria-label", "delete");
     del.addEventListener("click", function () {
+      pushHistory();
       parentTask.children = parentTask.children.filter(function (c) { return c.id !== child.id; });
       saveData();
       renderList(section, block);
@@ -1101,6 +1156,7 @@
     item.appendChild(del);
 
     item.addEventListener("dragstart", function (e) {
+      pushHistory();
       e.stopPropagation();
       item.classList.add("dragging");
     });
@@ -1143,6 +1199,7 @@
       e.preventDefault();
       var val = input.value.trim();
       if (!val) return;
+      pushHistory();
       task.children.push({ id: uid(), text: val, done: false });
       saveData();
       renderList(section, block);
@@ -1185,6 +1242,7 @@
     checkbox.className = "checkbox";
     checkbox.setAttribute("aria-label", "toggle complete");
     checkbox.addEventListener("click", function () {
+      pushHistory();
       var completed = !task.done;
       task.done = !task.done;
       saveData();
@@ -1217,6 +1275,7 @@
       transfer.title = "转到 Daily";
       transfer.setAttribute("aria-label", "transfer to daily");
       transfer.addEventListener("click", function () {
+        pushHistory();
         setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
         getTasks(transferTarget, "").push(task);
         saveData();
@@ -1249,6 +1308,7 @@
     del.textContent = "×";
     del.setAttribute("aria-label", "delete");
     del.addEventListener("click", function () {
+      pushHistory();
       setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
       saveData();
       renderList(section, block);
@@ -1262,6 +1322,7 @@
     }
 
     group.addEventListener("dragstart", function (e) {
+      pushHistory();
       e.stopPropagation();
       group.classList.add("dragging");
     });
@@ -1354,7 +1415,13 @@
         if (!obj) return;
         if (!Array.isArray(obj.children)) obj.children = [];
         if (typeof obj.expanded !== "boolean") obj.expanded = false;
-        if (childAssignments.hasOwnProperty(obj.id)) obj.children = childAssignments[obj.id];
+        if (childAssignments.hasOwnProperty(obj.id)) {
+          obj.children = childAssignments[obj.id];
+          // Its children-list was rendered (so it had subtasks) but a drag just
+          // emptied it out — the subtask forked a copy of this parent wherever
+          // it landed, so this now-empty husk should vanish rather than linger.
+          if (!obj.children.length) return;
+        }
         groupObjs.push(obj);
       });
 
@@ -1426,6 +1493,7 @@
       var input = form.querySelector("input");
       var val = input.value.trim();
       if (!val) return;
+      pushHistory();
       var newId = uid();
       getTasks(section, block).push({ id: newId, lineageId: newId, text: val, done: false, expanded: false, children: [] });
       input.value = "";
@@ -1531,9 +1599,20 @@
     });
   })();
 
+  document.getElementById("undoBtn").addEventListener("click", undo);
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+      var tag = document.activeElement && document.activeElement.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      undo();
+    }
+  });
+
   renderDate();
   saveData();
   render();
+  updateUndoButton();
 })();
 </script>
 </body>
