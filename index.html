@@ -702,16 +702,12 @@
     opacity: 0.9;
   }
 
-  /* ── History drawer ── */
+  /* ── History trigger button ── */
   .history-drawer {
     position: fixed;
     left: 22px;
     bottom: 22px;
     z-index: 50;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
   }
 
   .history-trigger {
@@ -749,16 +745,45 @@
     text-align: center;
   }
 
+  /* ── History modal overlay ── */
+  .history-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(59, 45, 36, 0.38);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: overlay-in 0.18s ease;
+  }
+
+  .history-overlay[hidden] {
+    display: none;
+  }
+
+  @keyframes overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
   .history-panel {
-    width: 300px;
-    max-height: 420px;
+    width: min(620px, 100%);
+    max-height: min(78vh, 640px);
     overflow: hidden;
     background: linear-gradient(180deg, rgba(255, 250, 241, 0.99), rgba(255, 244, 230, 0.99));
     border: 1px solid rgba(234, 217, 191, 0.92);
-    border-radius: 18px;
-    box-shadow: 0 18px 44px rgba(91, 64, 38, 0.12);
+    border-radius: 22px;
+    box-shadow: 0 28px 64px rgba(91, 64, 38, 0.18);
     display: flex;
     flex-direction: column;
+    animation: modal-in 0.22s cubic-bezier(0.34, 1.22, 0.64, 1);
+  }
+
+  @keyframes modal-in {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
   }
 
   .history-panel::before {
@@ -767,29 +792,40 @@
     height: 5px;
     flex-shrink: 0;
     background: linear-gradient(90deg, var(--accent), #dfac75);
-    border-radius: 17px 17px 0 0;
+    border-radius: 21px 21px 0 0;
   }
 
   .history-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px 8px;
-    font-size: 13px;
+    padding: 14px 18px 12px;
+    font-size: 15px;
     font-weight: 800;
     color: var(--ink);
     border-bottom: 1px solid rgba(234, 217, 191, 0.7);
     flex-shrink: 0;
   }
 
+  .history-header-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .history-header-icon {
+    font-size: 17px;
+    color: var(--accent);
+  }
+
   .history-close {
     border: none;
     background: transparent;
     color: var(--muted);
-    font-size: 19px;
-    padding: 0 3px;
+    font-size: 22px;
+    padding: 0 4px;
     line-height: 1;
-    border-radius: 6px;
+    border-radius: 8px;
     transition: color 0.15s, background 0.15s;
   }
 
@@ -802,34 +838,53 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 6px 12px 12px;
+    padding: 10px 18px 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+    align-content: start;
+  }
+
+  .history-content:has(.history-empty) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .history-empty {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     font-style: italic;
     text-align: center;
-    padding: 20px 10px;
+    padding: 40px 20px;
   }
 
   .history-day {
-    margin-bottom: 12px;
+    background: rgba(255, 250, 241, 0.82);
+    border: 1px solid rgba(234, 217, 191, 0.78);
+    border-radius: 16px;
+    overflow: hidden;
   }
 
   .history-date-label {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 800;
-    color: var(--muted);
+    color: var(--accent-deep);
     letter-spacing: 0.5px;
-    padding: 5px 2px 4px;
+    padding: 9px 12px 8px;
+    background: rgba(247, 223, 200, 0.45);
     border-bottom: 1px solid rgba(216, 191, 158, 0.4);
-    margin-bottom: 6px;
+  }
+
+  .history-day-tasks {
+    padding: 8px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
   }
 
   .history-task {
-    padding: 7px 10px;
-    margin-bottom: 5px;
+    padding: 8px 10px;
     background: rgba(255, 250, 241, 0.72);
     border: 1px solid rgba(234, 217, 191, 0.7);
     border-radius: 10px;
@@ -850,7 +905,7 @@
   }
 
   .history-text {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
     text-decoration: line-through;
     text-decoration-color: rgba(154, 137, 117, 0.45);
@@ -864,6 +919,23 @@
     padding: 2px 0 1px 17px;
     text-decoration: line-through;
     text-decoration-color: rgba(154, 137, 117, 0.35);
+  }
+
+  @media (max-width: 600px) {
+    .history-overlay {
+      padding: 16px;
+      align-items: flex-end;
+    }
+
+    .history-panel {
+      width: 100%;
+      max-height: 80vh;
+      border-radius: 20px 20px 14px 14px;
+    }
+
+    .history-content {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 600px) {
@@ -1002,18 +1074,24 @@
 </div>
 
 <div class="history-drawer" id="historyDrawer">
-  <div id="historyPanel" class="history-panel" hidden>
-    <div class="history-header">
-      <span>已完成任务</span>
-      <button type="button" id="historyClose" class="history-close">×</button>
-    </div>
-    <div id="historyContent" class="history-content"></div>
-  </div>
   <button type="button" id="historyTrigger" class="history-trigger">
     <span class="history-trigger-icon">✓</span>
     <span>历史记录</span>
     <span id="historyCount" class="history-count" hidden>0</span>
   </button>
+</div>
+
+<div id="historyOverlay" class="history-overlay" hidden>
+  <div id="historyPanel" class="history-panel">
+    <div class="history-header">
+      <div class="history-header-left">
+        <span class="history-header-icon">✓</span>
+        <span>已完成任务</span>
+      </div>
+      <button type="button" id="historyClose" class="history-close">×</button>
+    </div>
+    <div id="historyContent" class="history-content"></div>
+  </div>
 </div>
 
 <button type="button" id="undoBtn" class="undo-btn" title="撤销上一步操作 (Ctrl/Cmd+Z)" aria-label="撤销" disabled>↶</button>
@@ -1286,6 +1364,9 @@
       label.textContent = parseInt(parts[1]) + "月" + parseInt(parts[2]) + "日";
       dayEl.appendChild(label);
 
+      var tasksWrap = document.createElement("div");
+      tasksWrap.className = "history-day-tasks";
+
       var parentGroups = {};
       var displayList = [];
       byDate[date].forEach(function (entry) {
@@ -1343,9 +1424,10 @@
           });
         }
 
-        dayEl.appendChild(card);
+        tasksWrap.appendChild(card);
       });
 
+      dayEl.appendChild(tasksWrap);
       content.appendChild(dayEl);
     });
   }
@@ -2005,16 +2087,22 @@
     }
   });
 
-  document.getElementById("historyTrigger").addEventListener("click", function () {
-    var panel = document.getElementById("historyPanel");
-    if (panel.hidden) {
-      panel.removeAttribute("hidden");
-    } else {
-      panel.setAttribute("hidden", "");
-    }
+  function openHistory() {
+    document.getElementById("historyOverlay").removeAttribute("hidden");
+    document.body.style.overflow = "hidden";
+  }
+  function closeHistory() {
+    document.getElementById("historyOverlay").setAttribute("hidden", "");
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("historyTrigger").addEventListener("click", openHistory);
+  document.getElementById("historyClose").addEventListener("click", closeHistory);
+  document.getElementById("historyOverlay").addEventListener("click", function (e) {
+    if (e.target === this) closeHistory();
   });
-  document.getElementById("historyClose").addEventListener("click", function () {
-    document.getElementById("historyPanel").setAttribute("hidden", "");
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !document.getElementById("historyOverlay").hidden) closeHistory();
   });
 
   renderDate();
