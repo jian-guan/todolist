@@ -702,6 +702,170 @@
     opacity: 0.9;
   }
 
+  /* ── History drawer ── */
+  .history-drawer {
+    position: fixed;
+    left: 22px;
+    bottom: 22px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .history-trigger {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 14px 10px 12px;
+    border: 1px solid rgba(234, 217, 191, 0.92);
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255, 250, 241, 0.98), rgba(255, 244, 230, 0.98));
+    box-shadow: 0 6px 18px rgba(91, 64, 38, 0.10);
+    color: var(--accent-deep);
+    font-size: 13px;
+    font-weight: 800;
+    transition: box-shadow 0.15s, transform 0.1s;
+  }
+
+  .history-trigger:hover {
+    box-shadow: 0 8px 22px rgba(91, 64, 38, 0.14);
+  }
+
+  .history-trigger-icon {
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .history-count {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 1px 7px;
+    border-radius: 999px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .history-panel {
+    width: 300px;
+    max-height: 420px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255, 250, 241, 0.99), rgba(255, 244, 230, 0.99));
+    border: 1px solid rgba(234, 217, 191, 0.92);
+    border-radius: 18px;
+    box-shadow: 0 18px 44px rgba(91, 64, 38, 0.12);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .history-panel::before {
+    content: "";
+    display: block;
+    height: 5px;
+    flex-shrink: 0;
+    background: linear-gradient(90deg, var(--accent), #dfac75);
+    border-radius: 17px 17px 0 0;
+  }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 8px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink);
+    border-bottom: 1px solid rgba(234, 217, 191, 0.7);
+    flex-shrink: 0;
+  }
+
+  .history-close {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 19px;
+    padding: 0 3px;
+    line-height: 1;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .history-close:hover {
+    color: var(--danger);
+    background: rgba(181, 80, 62, 0.07);
+  }
+
+  .history-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 6px 12px 12px;
+  }
+
+  .history-empty {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px 10px;
+  }
+
+  .history-day {
+    margin-bottom: 12px;
+  }
+
+  .history-date-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    padding: 5px 2px 4px;
+    border-bottom: 1px solid rgba(216, 191, 158, 0.4);
+    margin-bottom: 6px;
+  }
+
+  .history-task {
+    padding: 7px 10px;
+    margin-bottom: 5px;
+    background: rgba(255, 250, 241, 0.72);
+    border: 1px solid rgba(234, 217, 191, 0.7);
+    border-radius: 10px;
+  }
+
+  .history-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .history-check {
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .history-text {
+    font-size: 12.5px;
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(154, 137, 117, 0.45);
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  .history-child {
+    font-size: 11.5px;
+    color: var(--muted);
+    padding: 2px 0 1px 17px;
+    text-decoration: line-through;
+    text-decoration-color: rgba(154, 137, 117, 0.35);
+  }
+
   @media (max-width: 600px) {
     .shell {
       padding: 30px 16px 40px;
@@ -837,6 +1001,21 @@
   </main>
 </div>
 
+<div class="history-drawer" id="historyDrawer">
+  <div id="historyPanel" class="history-panel" hidden>
+    <div class="history-header">
+      <span>已完成任务</span>
+      <button type="button" id="historyClose" class="history-close">×</button>
+    </div>
+    <div id="historyContent" class="history-content"></div>
+  </div>
+  <button type="button" id="historyTrigger" class="history-trigger">
+    <span class="history-trigger-icon">✓</span>
+    <span>历史记录</span>
+    <span id="historyCount" class="history-count" hidden>0</span>
+  </button>
+</div>
+
 <button type="button" id="undoBtn" class="undo-btn" title="撤销上一步操作 (Ctrl/Cmd+Z)" aria-label="撤销" disabled>↶</button>
 
 <script>
@@ -891,7 +1070,7 @@
   }
 
   function emptyData() {
-    return { daily: [], dailySchedule: null, future: [] };
+    return { daily: [], dailySchedule: null, future: [], completedHistory: [] };
   }
 
   function readStorage(key) {
@@ -921,6 +1100,7 @@
       next.daily = cleanList(v5.daily);
       next.future = Array.isArray(v5.future) ? cleanList(v5.future) : [];
       next.dailySchedule = cleanSchedule(v5.dailySchedule);
+      next.completedHistory = Array.isArray(v5.completedHistory) ? v5.completedHistory : [];
       return next;
     }
 
@@ -990,10 +1170,184 @@
 
   function undo() {
     if (!historyStack.length) return;
+    Object.keys(pendingArchive).forEach(function (id) {
+      clearTimeout(pendingArchive[id].timerId);
+    });
+    pendingArchive = {};
     data = historyStack.pop();
     saveData();
     render();
+    renderHistory();
     updateUndoButton();
+  }
+
+  var pendingArchive = {};
+
+  function addHistoryEntry(text, parentText, parentLineageId, children) {
+    data.completedHistory.unshift({
+      id: uid(),
+      date: todayKey(),
+      completedAt: Date.now(),
+      text: text,
+      parentText: parentText || null,
+      parentLineageId: parentLineageId || null,
+      children: children || []
+    });
+  }
+
+  function archiveTask(task, section, block) {
+    setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
+    addHistoryEntry(task.text, null, null, task.children.map(function (c) { return { text: c.text, done: c.done }; }));
+    saveData();
+    renderList(section, block);
+    renderHistory();
+  }
+
+  function archiveChild(child, parentTask, section, block) {
+    parentTask.children = parentTask.children.filter(function (c) { return c.id !== child.id; });
+    addHistoryEntry(child.text, parentTask.text, parentTask.lineageId);
+    if (parentTask.children.length === 0 && parentTask.done) {
+      if (pendingArchive[parentTask.id]) {
+        clearTimeout(pendingArchive[parentTask.id].timerId);
+        delete pendingArchive[parentTask.id];
+      }
+      setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== parentTask.id; }));
+    }
+    saveData();
+    renderList(section, block);
+    renderHistory();
+  }
+
+  function archivePendingDone() {
+    TOP_KEYS.forEach(function (k) {
+      var tasks = getTasks(k.section, k.block);
+      var toKeep = [];
+      var changed = false;
+      tasks.forEach(function (t) {
+        var doneChildren = t.children.filter(function (c) { return c.done; });
+        if (doneChildren.length) {
+          doneChildren.forEach(function (c) {
+            data.completedHistory.push({ id: uid(), date: todayKey(), completedAt: Date.now(), text: c.text, parentText: t.text, parentLineageId: t.lineageId, children: [] });
+          });
+          t.children = t.children.filter(function (c) { return !c.done; });
+          changed = true;
+        }
+        if (t.done) {
+          data.completedHistory.push({ id: uid(), date: todayKey(), completedAt: Date.now(), text: t.text, parentText: null, parentLineageId: null, children: t.children.map(function (c) { return { text: c.text, done: c.done }; }) });
+          changed = true;
+        } else {
+          toKeep.push(t);
+        }
+      });
+      if (changed) setTasks(k.section, k.block, toKeep);
+    });
+  }
+
+  function renderHistory() {
+    var content = document.getElementById("historyContent");
+    var countEl = document.getElementById("historyCount");
+    if (!content || !countEl) return;
+
+    var total = data.completedHistory.length;
+    if (total > 0) {
+      countEl.textContent = total;
+      countEl.removeAttribute("hidden");
+    } else {
+      countEl.setAttribute("hidden", "");
+    }
+
+    content.innerHTML = "";
+
+    if (!total) {
+      var emptyEl = document.createElement("p");
+      emptyEl.className = "history-empty";
+      emptyEl.textContent = "还没有完成的任务";
+      content.appendChild(emptyEl);
+      return;
+    }
+
+    var byDate = {};
+    var dateOrder = [];
+    data.completedHistory.forEach(function (entry) {
+      if (!byDate[entry.date]) {
+        byDate[entry.date] = [];
+        dateOrder.push(entry.date);
+      }
+      byDate[entry.date].push(entry);
+    });
+
+    dateOrder.forEach(function (date) {
+      var dayEl = document.createElement("div");
+      dayEl.className = "history-day";
+
+      var parts = date.split("-");
+      var label = document.createElement("div");
+      label.className = "history-date-label";
+      label.textContent = parseInt(parts[1]) + "月" + parseInt(parts[2]) + "日";
+      dayEl.appendChild(label);
+
+      var parentGroups = {};
+      var displayList = [];
+      byDate[date].forEach(function (entry) {
+        if (entry.parentLineageId) {
+          if (!parentGroups[entry.parentLineageId]) {
+            parentGroups[entry.parentLineageId] = { parentText: entry.parentText, items: [] };
+            displayList.push({ type: "group", lineageId: entry.parentLineageId });
+          }
+          parentGroups[entry.parentLineageId].items.push(entry);
+        } else {
+          displayList.push({ type: "task", entry: entry });
+        }
+      });
+
+      displayList.forEach(function (item) {
+        var card = document.createElement("div");
+        card.className = "history-task";
+
+        if (item.type === "task") {
+          var topRow = document.createElement("div");
+          topRow.className = "history-row";
+          var chk = document.createElement("span");
+          chk.className = "history-check";
+          chk.textContent = "✓";
+          var txt = document.createElement("span");
+          txt.className = "history-text";
+          txt.textContent = item.entry.text;
+          topRow.appendChild(chk);
+          topRow.appendChild(txt);
+          card.appendChild(topRow);
+          (item.entry.children || []).forEach(function (c) {
+            var childEl = document.createElement("div");
+            childEl.className = "history-child";
+            childEl.textContent = "• " + c.text;
+            card.appendChild(childEl);
+          });
+        } else {
+          var group = parentGroups[item.lineageId];
+          var topRow = document.createElement("div");
+          topRow.className = "history-row";
+          var chk = document.createElement("span");
+          chk.className = "history-check";
+          chk.textContent = "✓";
+          var txt = document.createElement("span");
+          txt.className = "history-text";
+          txt.textContent = group.parentText;
+          topRow.appendChild(chk);
+          topRow.appendChild(txt);
+          card.appendChild(topRow);
+          group.items.forEach(function (sub) {
+            var childEl = document.createElement("div");
+            childEl.className = "history-child";
+            childEl.textContent = "• " + sub.text;
+            card.appendChild(childEl);
+          });
+        }
+
+        dayEl.appendChild(card);
+      });
+
+      content.appendChild(dayEl);
+    });
   }
 
   function getTasks(section, block) {
@@ -1126,12 +1480,24 @@
     checkbox.className = "checkbox";
     checkbox.setAttribute("aria-label", "toggle complete");
     checkbox.addEventListener("click", function () {
-      pushHistory();
-      var completed = !child.done;
-      child.done = !child.done;
-      saveData();
-      renderList(section, block);
-      if (completed) markJustCompleted(child.id);
+      if (pendingArchive[child.id]) {
+        clearTimeout(pendingArchive[child.id].timerId);
+        delete pendingArchive[child.id];
+        child.done = false;
+        saveData();
+        renderList(section, block);
+      } else if (!child.done) {
+        pushHistory();
+        child.done = true;
+        saveData();
+        renderList(section, block);
+        markJustCompleted(child.id);
+        var tid = setTimeout(function () {
+          delete pendingArchive[child.id];
+          archiveChild(child, parentTask, section, block);
+        }, 1500);
+        pendingArchive[child.id] = { timerId: tid };
+      }
     });
 
     var text = document.createElement("span");
@@ -1146,6 +1512,10 @@
     del.setAttribute("aria-label", "delete");
     del.addEventListener("click", function () {
       pushHistory();
+      if (pendingArchive[child.id]) {
+        clearTimeout(pendingArchive[child.id].timerId);
+        delete pendingArchive[child.id];
+      }
       parentTask.children = parentTask.children.filter(function (c) { return c.id !== child.id; });
       saveData();
       renderList(section, block);
@@ -1156,6 +1526,8 @@
     item.appendChild(del);
 
     item.addEventListener("dragstart", function (e) {
+      Object.keys(pendingArchive).forEach(function (id) { clearTimeout(pendingArchive[id].timerId); });
+      pendingArchive = {};
       pushHistory();
       e.stopPropagation();
       item.classList.add("dragging");
@@ -1242,12 +1614,24 @@
     checkbox.className = "checkbox";
     checkbox.setAttribute("aria-label", "toggle complete");
     checkbox.addEventListener("click", function () {
-      pushHistory();
-      var completed = !task.done;
-      task.done = !task.done;
-      saveData();
-      renderList(section, block);
-      if (completed) markJustCompleted(task.id);
+      if (pendingArchive[task.id]) {
+        clearTimeout(pendingArchive[task.id].timerId);
+        delete pendingArchive[task.id];
+        task.done = false;
+        saveData();
+        renderList(section, block);
+      } else if (!task.done) {
+        pushHistory();
+        task.done = true;
+        saveData();
+        renderList(section, block);
+        markJustCompleted(task.id);
+        var tid = setTimeout(function () {
+          delete pendingArchive[task.id];
+          archiveTask(task, section, block);
+        }, 1500);
+        pendingArchive[task.id] = { timerId: tid };
+      }
     });
 
     var text = document.createElement("span");
@@ -1309,6 +1693,16 @@
     del.setAttribute("aria-label", "delete");
     del.addEventListener("click", function () {
       pushHistory();
+      if (pendingArchive[task.id]) {
+        clearTimeout(pendingArchive[task.id].timerId);
+        delete pendingArchive[task.id];
+      }
+      (task.children || []).forEach(function (c) {
+        if (pendingArchive[c.id]) {
+          clearTimeout(pendingArchive[c.id].timerId);
+          delete pendingArchive[c.id];
+        }
+      });
       setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
       saveData();
       renderList(section, block);
@@ -1322,6 +1716,8 @@
     }
 
     group.addEventListener("dragstart", function (e) {
+      Object.keys(pendingArchive).forEach(function (id) { clearTimeout(pendingArchive[id].timerId); });
+      pendingArchive = {};
       pushHistory();
       e.stopPropagation();
       group.classList.add("dragging");
@@ -1609,9 +2005,23 @@
     }
   });
 
+  document.getElementById("historyTrigger").addEventListener("click", function () {
+    var panel = document.getElementById("historyPanel");
+    if (panel.hidden) {
+      panel.removeAttribute("hidden");
+    } else {
+      panel.setAttribute("hidden", "");
+    }
+  });
+  document.getElementById("historyClose").addEventListener("click", function () {
+    document.getElementById("historyPanel").setAttribute("hidden", "");
+  });
+
   renderDate();
+  archivePendingDone();
   saveData();
   render();
+  renderHistory();
   updateUndoButton();
 })();
 </script>
