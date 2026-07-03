@@ -1077,7 +1077,6 @@
   <button type="button" id="historyTrigger" class="history-trigger">
     <span class="history-trigger-icon">✓</span>
     <span>历史记录</span>
-    <span id="historyCount" class="history-count" hidden>0</span>
   </button>
 </div>
 
@@ -1323,16 +1322,9 @@
 
   function renderHistory() {
     var content = document.getElementById("historyContent");
-    var countEl = document.getElementById("historyCount");
-    if (!content || !countEl) return;
+    if (!content) return;
 
     var total = data.completedHistory.length;
-    if (total > 0) {
-      countEl.textContent = total;
-      countEl.removeAttribute("hidden");
-    } else {
-      countEl.setAttribute("hidden", "");
-    }
 
     content.innerHTML = "";
 
