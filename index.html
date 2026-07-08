@@ -1111,7 +1111,7 @@
     { section: "daily", block: "evening" },
     { section: "future", block: "" }
   ];
-  var TRANSFER_MAP = { future: "daily" };
+  var TRANSFER_MAP = { future: "daily", daily: "future" };
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -1730,8 +1730,8 @@
       transfer.type = "button";
       transfer.className = "transfer-btn";
       transfer.textContent = "→";
-      transfer.title = "转到 Daily";
-      transfer.setAttribute("aria-label", "transfer to daily");
+      transfer.title = transferTarget === "daily" ? "转到 Daily" : "转到 Future";
+      transfer.setAttribute("aria-label", "transfer to " + transferTarget);
       transfer.addEventListener("click", function () {
         pushHistory();
         setTasks(section, block, getTasks(section, block).filter(function (t) { return t.id !== task.id; }));
